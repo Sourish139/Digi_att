@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Digital Attendance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .sidebar-link:hover { background-color: rgba(37, 99, 235, 0.1); color: #2563eb; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <aside class="w-64 bg-white border-r border-slate-200 hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span class="text-xl font-bold text-slate-900 tracking-tight">Digital<span class="text-blue-600">Atnd</span></span>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" class="sidebar-link flex items-center gap-3 p-3 rounded-xl text-blue-600 bg-blue-50 font-semibold">
+                <i class="fa-solid fa-house"></i> Overview
+            </a>
+        </nav>
+
+        <div class="p-4 border-t">
+            <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 text-red-500 font-medium hover:bg-red-50 rounded-xl transition">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+        
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div class="flex items-center gap-5">
+               <div class="w-20 h-20 rounded-2xl bg-slate-200 overflow-hidden border-4 border-white shadow-sm">
+    <div class="w-full h-full flex items-center justify-center text-slate-400">
+        <i class="fa-solid fa-user text-3xl"></i>
+    </div>
+</div>
+                <div>
+                    <h1 id="studentName" class="text-2xl font-bold text-slate-900"></h1>
+                            <div class="flex flex-wrap gap-x-4 text-sm text-slate-500 font-medium">
+            <span id="enrollment"></span>
+            <span id="roll"></span>
+        </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Branch & Year</p>
+                    <p id="branchYear" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+                <div class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs font-bold uppercase tracking-wider">Active Semester</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-card p-6 rounded-3xl shadow-sm relative overflow-hidden">
+                <p class="text-slate-500 text-sm font-semibold mb-1">Overall Attendance</p>
+                <h2 id="attendance" class="text-4xl font-black text-slate-900">--%</h2>
+<p class="mt-2 text-sm text-slate-500">
+    Present: <span id="present">--</span> /
+    Total: <span id="total">--</span>
+</p>
+                <div class="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-blue-600 h-full" style="width: 0%"></div>
+                </div>
+                <p class="mt-3 text-xs text-blue-600 font-bold tracking-wide">
+                    <i class="fa-solid fa-circle-info"></i> Currently Eligible
+                </p>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
+                <p class="text-slate-400 text-sm font-semibold mb-1">Decision Support</p>
+                <h3 class="text-lg font-bold mb-2">Can I Skip?</h3>
+                <div class="flex items-center gap-3 text-amber-400">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <p id="skipText" class="text-sm font-medium">--</p>
+                </div>
+                <p class="mt-2 text-[10px] text-slate-500 uppercase tracking-widest font-bold">Based on 67% threshold</p>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-slate-900 mb-6">Subject Breakdown</h2>
+        <div id="subjectsContainer" class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-2"></div>
+    </main>
+ <div id="subjectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl w-96 shadow-lg relative">
+        
+        <h2 id="modalSubjectName" class="text-xl font-bold mb-4 text-center"></h2>
+
+        <div class="space-y-2 text-sm text-slate-700">
+            <p><b>Attendance:</b> <span id="modalAttendance"></span></p>
+            <p><b>Present:</b> <span id="modalPresent"></span></p>
+            <p><b>Total Classes:</b> <span id="modalTotal"></span></p>
+            <p><b>Marks:</b> <span id="modalMarks"></span></p>
+        </div>
+
+        <button onclick="closeModal()" 
+            class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            Close
+        </button>
+        
+        <button onclick="closeModal()" 
+            class="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+    </div>
+</div>
+<script>
+    const API_BASE ="/api"; //window.location.protocol.startsWith('http')
+        //? `${window.location.protocol}//${window.location.hostname || '127.0.0.1'}:5000`
+        //: 'http://127.0.0.1:5000';
+
+        // MARKS (UPDATED LOGIC)
+    function calculateMarks(percentage) {
+        if (percentage < 67) return 0;
+        else if (percentage < 70) return 1.2;
+        else if (percentage < 75) return 2.4;
+        else if (percentage < 80) return 3.6;
+        else if (percentage < 85) return 4.8;
+        else return 6;
+    }
+
+    //calculateMARKS
+    function calculateSkip(present, total) {
+        if (total === 0) return 0;
+
+        const maxSkip = Math.floor(((present / 0.67) - total) + 0.0001);
+
+        return maxSkip < 0 ? 0 : maxSkip;
+    }
+    function viewDetails(subjectName, percentage, present, total, marks) {
+        document.getElementById("modalSubjectName").innerText = subjectName;
+        document.getElementById("modalAttendance").innerText = percentage + "%";
+        document.getElementById("modalPresent").innerText = present;
+        document.getElementById("modalTotal").innerText = total;
+        document.getElementById("modalMarks").innerText = marks;
+
+        document.getElementById("subjectModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("subjectModal").classList.add("hidden");
+    }
+
+    async function loadStudentData() {
+        const enrollment = localStorage.getItem("userId");
+
+        // 1. Get student info
+        const res = await fetch(`${API_BASE}/api/student/${enrollment}`);
+        const student = await res.json();
+        console.log("Student object:", student);
+        console.log("Student:", student);
+        console.log("Enrollment from localStorage:", enrollment);
+        //console.log("Attendance Data:", attendance);
+
+        if (student) {
+            document.getElementById("studentName").innerText = student.name;
+            document.getElementById("enrollment").innerText = "EN: " + student.enrollment_no;
+            document.getElementById("roll").innerText = "Roll: " + student.roll_no;
+                    function formatYear(year) {
+                if (year == 1) return "1st Year";
+                if (year == 2) return "2nd Year";
+                if (year == 3) return "3rd Year";
+                if (year == 4) return "4th Year";
+                return year + " Year";
+            }
+
+            document.getElementById("branchYear").innerText =
+                `${student.branch} | ${formatYear(student.year)}`;
+            // 2. Get attendance using student_id
+            const attRes = await fetch(`${API_BASE}/api/attendance/${student.student_id}`);
+            const attendance = await attRes.json();
+            // 🔥 LOAD SUBJECTS FROM DB
+
+            //console.log("Attendance:", attendance);
+            // 1. Fetch subjects
+            const subRes = await fetch(`${API_BASE}/api/student-subjects/${student.student_id}`);
+    const subjects = await subRes.json() || [];
+
+    const attRes2 = await fetch(`${API_BASE}/api/subject-attendance/${student.student_id}`);
+    const attendanceMap = await attRes2.json() || {};
+
+    const container = document.getElementById("subjectsContainer");
+    container.innerHTML = "";
+
+    // 🔴 IF NO SUBJECTS
+    if (subjects.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center text-slate-400">
+                No subjects assigned yet
+            </div>
+        `;
+    } else {
+        subjects.sort((a, b) => {
+        const attA = attendanceMap[a.subject_id] || { percentage: 0 };
+        const attB = attendanceMap[b.subject_id] || { percentage: 0 };
+
+        return attA.percentage - attB.percentage; // ascending (worst first)
+    });
+        subjects.forEach(sub => {
+        const subjectId = sub.subject_id;
+        const subjectName = sub.subjects.subject_name;
+        const facultyName = sub.subjects.faculty?.name || "N/A";
+
+        const att = attendanceMap[subjectId] || {
+            present: 0,
+            total: 0,
+            percentage: 0
+        };
+
+        const skip = calculateSkip(att.present, att.total);
+
+        let skipMsg = "";
+
+        if (att.total === 0) {
+            skipMsg = "No data";
+        } else if (skip === 0) {
+            skipMsg = "❌ You can't skip";
+        } else if (skip === 1) {
+            skipMsg = "⚠️ You can skip 1 class";
+        } else {
+            skipMsg = `✅ You can skip ${skip} classes`;
+        }
+
+            // MARKS
+        
+
+    let marks = calculateMarks(att.percentage);
+
+            // COLOR
+            let color = "text-gray-400 bg-gray-100";
+            if (att.total > 0) {
+                if (att.percentage >= 88) color = "text-emerald-600 bg-emerald-50";
+                else if (att.percentage >= 80) color = "text-blue-600 bg-blue-50";
+                else if (att.percentage >= 67) color = "text-amber-600 bg-amber-50";
+                else color = "text-red-600 bg-red-50";
+            }
+
+            container.innerHTML += `
+                <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <h3 class="font-bold text-slate-800 mb-1">${subjectName}</h3>
+    <p class="text-xs text-slate-400 mb-2">Faculty: ${facultyName}</p>
+
+                    <div class="flex justify-between mb-2">
+                        <span class="px-2 py-1 text-xs font-bold rounded ${color}">
+                            ${att.total > 0 ? att.percentage + "%" : "--"}
+                        </span>
+                        <span class="text-xs text-slate-400">
+                            ${att.total > 0 ? marks.toFixed(1) + " Marks" : "--"}
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mb-1">
+        ${att.total > 0 ? `Present: ${att.present} / ${att.total}` : "No attendance yet"}
+    </p>
+
+    <p class="text-[11px] font-semibold ${
+        skip === 0 ? 'text-red-500' :
+        skip === 1 ? 'text-amber-500' :
+        'text-emerald-600'
+    }">
+        ${skipMsg}
+    </p>
+
+                <button onclick="viewDetails(
+        '${subjectName}',
+        ${att.percentage},
+        ${att.present},
+        ${att.total},
+        '${marks.toFixed(1)} Marks'
+    )"
+    class="w-full py-2 bg-slate-100 text-xs rounded hover:bg-blue-600 hover:text-white transition">
+    View Details
+    </button>
+                </div>
+            `;
+        });
+    }
+            // 3. Show on UI
+        // SAFE DATA EXTRACTION
+    const percentage = (attendance && attendance.total_classes > 0)
+        ? attendance.percentage
+        : 0;
+
+    const present = (attendance && attendance.present !== undefined)
+        ? attendance.present
+        : 0;
+
+    const total = (attendance && attendance.total_classes !== undefined)
+        ? attendance.total_classes
+        : 0;
+
+
+    // 🎯 UI UPDATE
+
+    // Attendance %
+    document.getElementById("attendance").innerText =
+        total > 0 ? percentage + "%" : "--";
+
+    // Progress bar
+    document.getElementById("progressBar").style.width =
+        total > 0 ? percentage + "%" : "0%";
+
+    // Present / Total
+    document.getElementById("present").innerText = total > 0 ? present : "--";
+    document.getElementById("total").innerText = total > 0 ? total : "--";
+    // 🔥 SKIP LOGIC
+    const skip = calculateSkip(present, total);
+
+    let message = "";
+
+    if (total === 0) {
+        message = "No data available";
+    } else if (skip === 0) {
+        message = "Attendance low! You cannot skip any class.";
+    } else if (skip === 1) {
+        message = "Safe to skip 1 lecture only.";
+    } else {
+        message = `Safe to skip ${skip} lectures.`;
+    }
+
+    document.getElementById("skipText").innerText = message;
+    // 🔥 UPDATE TOP MARKS
+    document.getElementById("marks").innerText =
+        total > 0 ? calculateMarks(percentage).toFixed(1) : "--";
+        }
+        
+    }
+    
+    // --- SECURE STUDENT SESSION GUARD ---
+    function verifyStudentAccess() {
+        const role = localStorage.getItem("role");
+        const userId = localStorage.getItem("userId");
+
+        // If session is invalid, overwrite history entry with login.html
+        if (role !== "student" || !userId) {
+            window.location.replace("login.html");
+        }
+    }
+
+    // Handle "Back" swipe or button press (detects page visibility from cache)
+    window.addEventListener('pageshow', function(event) {
+        // Force re-check if the page is loaded from the back-forward cache
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            verifyStudentAccess();
+        }
+    });
+
+    // --- LOGOUT FUNCTION ---
+    function logoutUser(event) {
+        if(event) event.preventDefault();
+        
+        // Completely wipe the session data
+        localStorage.clear(); 
+        
+        // Redirect and replace the history entry so there is nothing to swipe back to
+        window.location.replace("login.html"); 
+    }
+
+    // Ensure the check runs immediately on page load
+    window.onload = () => {
+        verifyStudentAccess(); // Secure the page first
+        loadStudentData();     // Your existing data loading function
+    };
+</script>
+</body>
+</html>
